@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 from tqdm import tqdm
+import numpy as np
 
 first_url = 'https://www.ufc.com/athletes/all?gender=All&search=&page='
 
@@ -57,8 +58,15 @@ for fighter_url in fighter_urls:
         submissions.append(athlete_stat_numbs[0].text)
     elif 'finish' in athlete_stat_label[0].text:
         first_round_finishes.append(athlete_stat_numbs[0].text)
-    else:
-        continue
+    else: continue
     if 'strik' in accuracies_labels[0].text and 'taked' in accuracies_labels[1].text:
         striking_accuracy.append(accuracies_texts[0].text)
         takedown_accuracy.append(accuracies_texts[1].text)
+    elif 'strik' in accuracies_labels[0].text:
+        striking_accuracy.append(accuracies_texts[0].text)
+    elif 'taked' in accuracies_labels[0].text:
+        takedown_accuracy.append(accuracies_texts[0].text)
+    else: continue
+
+master_array = np.concatenate(knockouts, submissions, first_round_finishes, striking_accuracy, takedown_accuracy)
+print(master_array)
