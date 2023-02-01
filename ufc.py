@@ -24,6 +24,8 @@ for url in tqdm(page_urls):
 knockouts = []
 submissions = []
 first_round_finishes = []
+striking_accuracy = []
+takedown_accuracy = []
 
 
 for fighter_url in fighter_urls:
@@ -31,6 +33,8 @@ for fighter_url in fighter_urls:
     soup = BeautifulSoup(response.text, "html.parser")
     athlete_stat_numbs = soup.find_all(class_ = 'athlete-stats__text athlete-stats__stat-numb')
     athlete_stat_label = soup.find_all(class_ = 'athlete-stats__text athlete-stats__stat-text')
+    accuracies_labels = soup.find_all(class_ = "e-t3")
+    accuracies_texts = soup.find_all('e-chart-circle__percent')
     if len(athlete_stat_numbs) == 3:
         knockouts.append(athlete_stat_numbs[0].text)
         submissions.append(athlete_stat_numbs[1].text)
@@ -55,5 +59,6 @@ for fighter_url in fighter_urls:
         first_round_finishes.append(athlete_stat_numbs[0].text)
     else:
         continue
-        
-
+    if 'strik' in accuracies_labels[0].text and 'taked' in accuracies_labels[1].text:
+        striking_accuracy.append(accuracies_texts[0].text)
+        takedown_accuracy.append(accuracies_texts[1].text)
