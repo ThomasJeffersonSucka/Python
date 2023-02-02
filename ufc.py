@@ -81,7 +81,7 @@ for fighter_url in tqdm(fighter_urls):
         nickname_element = soup.find('p', class_ = 'hero-profile__nickname').text
     except: continue
     if nickname_element is None:
-        nickname = ''
+        nickname_element = ''
         pass
     else:
         nickname.append(nickname_element)
@@ -101,4 +101,5 @@ data = list(zip(fighter_name, nickname, weight_class, record, knockouts, submiss
 df = pd.DataFrame(data, columns=['Fighter Name', 'Nickname', 'Weight Class', 'Record', 'Knockouts', 'Submissions', 'First Round Finishes', 'Striking Accuracy',
  'Takedown Accuracy']) 
 
-print(df)
+
+df.to_csv('test.csv', index=False)
