@@ -57,10 +57,26 @@ elif 'strik' in accuracies_labels[0].lower():
 elif 'taked' in accuracies_labels[0].lower():
     takedown_accuracy.append(accuracies_texts[0])
 
-fighter_name.append(soup.find('h1', class_ = 'hero-profile__name').text)
-nickname.append(soup.find('p', class_ = 'hero-profile__nickname').text)
-weight_class.append(soup.find('p', class_ = 'hero-profile__division-title').text)
-record.append(soup.find('p', class_ = 'hero-profile__division-body').text)
+fighter_name_element = soup.find('h1', class_ = 'hero-profile__name').text
+if fighter_name is None:
+    pass
+else:
+    fighter_name.append(fighter_name_element)
+nickname_element = soup.find('p', class_ = 'hero-profile__nickname').text
+if nickname_element is None:
+    pass
+else:
+    nickname.append(nickname_element)
+weight_class_element = soup.find('p', class_ = 'hero-profile__division-title').text
+if weight_class_element is None:
+    pass
+else:
+    weight_class.append(weight_class_element)
+record_element = soup.find('p', class_ = 'hero-profile__division-body').text
+if record_element is None:
+    pass
+else:
+    record.append(record_element)
 
 # data = list(zip(fighter_name, nickname, weight_class, record, knockouts, submissions, first_round_finishes, striking_accuracy, takedown_accuracy))
 # df = pd.DataFrame(data, columns=['Fighter Name', 'Nickname', 'Weight Class', 'Record' 'Knockouts', 'Submissions', 'First Round Finishes', 'Striking Accuracy',
