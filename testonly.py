@@ -2,28 +2,17 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 from tqdm import tqdm
+import numpy as np
+import os
+import multiprocessing
 
 first_url = 'https://www.ufc.com/athletes/all?gender=All&search=&page='
 
 page_urls = []
-for page in range(0,253):
+for page in range(0,5):
     url = first_url + str(page)
     page_urls.append(url)
 
-fighter_urls = []
-
-ufc_url = 'https://ufc.com'
-for url in tqdm(page_urls):
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, "html.parser")
-    hrefs = soup.find_all('a', class_ = 'e-button--black')
-    for href in hrefs:
-        second_link = href['href']
-        fighter_url = ufc_url + second_link
-        fighter_urls.append(fighter_url)
-
-
-# print(fighter_urls)
 
 name = []
 nickname = []
@@ -58,19 +47,20 @@ sig_strikes_leg = []
 
 
 # fighter_urls = ['https://www.ufc.com/athlete/israel-adesanya']
-
-for url in tqdm(fighter_urls):
+def process_url(url, name, nickname, weight_class, record, knockouts, submissions, first_round_finishes, takedown_accuracy, striking_accuracy,
+ sig_str_landed_total, sig_str_attempted_total, takedowns_landed_total, takedowns_attempted_total, sig_strikes_per_min, takedown_avg_per_min, sig_str_def,
+  knockdown_avg, sig_strikes_absorbed_per_min, sub_avg_per_min, takedown_def, avg_fight_time, sig_strikes_while_standing, sig_strikes_while_clinched,
+   sig_strikes_while_grounded, win_by_ko_tko, win_by_decision, win_by_submission, sig_strikes_head, sig_strikes_body, sig_strikes_leg):
     response = requests.get(url)
     soup = BeautifulSoup(response.text, "html.parser")
     
- # Name   
     try:
         fighter_name_element = soup.find('h1', class_ = 'hero-profile__name').text
         name.append(fighter_name_element)
     except:
         name.append('None')
     
-# loop through  for sig strikes, takedown avg, sig str def, knockdown avg
+# loop through each group for sig strikes, takedown avg, sig str def, knockdown avg
     try:
         groups1 = soup.find_all("div", class_="c-stat-compare__group c-stat-compare__group-1")
         if groups1:
@@ -114,7 +104,7 @@ for url in tqdm(fighter_urls):
         sig_str_def.append("N/A")
         knockdown_avg.append("N/A")
 
-#loop through for sig str absorbed, submission avg, takedown def, avg fight time
+#loop through each group for sig str absorbed, submission avg, takedown def, avg fight time
     try:
         groups2 = soup.find_all("div", class_="c-stat-compare__group c-stat-compare__group-2")
         if groups2:
@@ -217,7 +207,6 @@ for url in tqdm(fighter_urls):
         win_by_decision.append("0(0%)")
         win_by_submission.append("0(0%)")
 
-# sig strikes by target (head, body, leg)
     try:
         sig_str_by_target = soup.find('div', class_ = 'c-stat-body__title')
         if sig_str_by_target:
@@ -241,6 +230,7 @@ for url in tqdm(fighter_urls):
         sig_strikes_leg.append('N/A')
 
 #gets knockouts, subs, first round wins
+
     try:
         labels1 =[]
         numbs = []
@@ -315,7 +305,6 @@ for url in tqdm(fighter_urls):
         submissions.append("0")
         first_round_finishes.append("0")
 
-#total strikes landed/attempted, total takedowns landed/attempted
     try:
         labels1 = []
         numbs = []
@@ -364,7 +353,6 @@ for url in tqdm(fighter_urls):
         takedowns_landed_total.append("N/A")
         takedowns_attempted_total.append("N/A")
 
-#Striking and takedown accuracy
     try:
         accuracies_labels = [element.text for element in soup.find_all('h2', class_ = "e-t3")]
         accuracies_texts = [element.text for element in soup.find_all('text', 'e-chart-circle__percent')]
@@ -415,6 +403,72 @@ for url in tqdm(fighter_urls):
     except AttributeError:
         record.append('None')
 
+def main():
+    fighter_urls = []
+    ufc_url = 'https://ufc.com'
+    for url in tqdm(page_urls):
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, "html.parser")
+        hrefs = soup.find_all('a', class_ = 'e-button--black')
+        for href in hrefs:
+            second_link = href['href']
+            fighter_url = ufc_url + second_link
+            fighter_urls.append(fighter_url)
+    manager = multiprocessing.Manager()
+    name = manager.list()
+    nickname = manager.list()
+    weight_class = manager.list()
+    record = manager.list()
+    knockouts = manager.list()
+    submissions = manager.list()
+    first_round_finishes = manager.list()
+    takedown_accuracy = manager.list()
+    striking_accuracy = manager.list()
+    sig_str_landed_total = manager.list()
+    sig_str_attempted_total = manager.list()
+    takedowns_landed_total = manager.list()
+    takedowns_attempted_total = manager.list()
+    sig_strikes_per_min = manager.list()
+    takedown_avg_per_min = manager.list()
+    sig_str_def = manager.list()
+    knockdown_avg = manager.list()
+    sig_strikes_absorbed_per_min = manager.list()
+    sub_avg_per_min = manager.list()
+    takedown_def = manager.list()
+    avg_fight_time = manager.list()
+    sig_strikes_while_standing = manager.list()
+    sig_strikes_while_clinched = manager.list()
+    sig_strikes_while_grounded = manager.list()
+    win_by_ko_tko = manager.list()
+    win_by_decision = manager.list()
+    win_by_submission = manager.list()
+    sig_strikes_head = manager.list()
+    sig_strikes_body = manager.list()
+    sig_strikes_leg = manager.list()
+
+
+    processes = []
+    for url in fighter_urls:
+        process = multiprocessing.Process(target=process_url, args=(url, name, nickname, weight_class, record, knockouts, submissions, first_round_finishes, takedown_accuracy,
+            striking_accuracy, sig_str_landed_total, sig_str_attempted_total, takedowns_landed_total, takedowns_attempted_total,
+            sig_strikes_per_min, takedown_avg_per_min, sig_str_def, knockdown_avg, sig_strikes_absorbed_per_min,
+            sub_avg_per_min, takedown_def, avg_fight_time, sig_strikes_while_standing, sig_strikes_while_clinched,
+            sig_strikes_while_grounded, win_by_ko_tko, win_by_decision, win_by_submission, sig_strikes_head,
+            sig_strikes_body, sig_strikes_leg))
+        process.start()
+        processes.append(process)
+
+    for process in processes:
+        process.start()
+
+    for process in processes:
+        process.join()
+
+if __name__ == '__main__':
+    main()
+
+
+
 data = {
     'Name': name,
     'Nickname': nickname,
@@ -440,12 +494,12 @@ data = {
     'Sig Strikes While Standing': sig_strikes_while_standing,
     'Sig Strikes While Clinched': sig_strikes_while_clinched,
     'Sig Strikes While Grounded': sig_strikes_while_grounded,
-    'Sig Strikes Head': sig_strikes_head,
-    'Sig Strikes Body': sig_strikes_body,
-    'Sig Strikes Leg': sig_strikes_leg,
     'Win by KO/TKO': win_by_ko_tko,
     'Win by Decision': win_by_decision,
-    'Win by Submission': win_by_submission
+    'Win by Submission': win_by_submission,
+    'Sig Strikes Head': sig_strikes_head,
+    'Sig Strikes Body': sig_strikes_body,
+    'Sig Strikes Leg': sig_strikes_leg
 }
 
 df = pd.DataFrame(data)
