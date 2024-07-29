@@ -1,0 +1,42 @@
+import requests
+from bs4 import BeautifulSoup as BS
+import pandas as pd
+from io import StringIO
+from tqdm import tqdm as ss
+
+url = "http://www.ufcstats.com/statistics/events/completed?page=all"
+response = requests.get(url)
+soup = BS(response.text, "html.parser")
+
+firstpageurls = []
+
+
+rows = soup.findAll(class_ = "b-statistics__table-row")
+for row in rows:
+    links = row.find_all(class_ = "b-link b-link_style_black")
+    for link in links:
+        firstpageurls.append(link['href'])
+
+data = []
+
+for url in ss(firstpageurls, desc="Scraping URLs"):
+    response = requests.get(url)
+    soup = BS(response.text, "html.parser")
+    date = soup.find_all(class_="b-list__box-list-item")[0].text.strip()
+    location = soup.find_all(class_="b-list__box-list-item")[1].text.strip() 
+    table = soup.find('table', class_ = 'b-fight-details__table b-fight-details__table_style_margin-top b-fight-details__table_type_event-details js-fight-table')
+    table_html = str(table)
+    table_io = StringIO(table_html)
+    df_table = pd.read_html(table_io)[0]
+    df_table['Date'] = date
+    df_table['Location'] = location
+    print(date)
+    print(location)
+
+    data.append(df_table)
+
+
+df = pd.concat(data, ignore_index=True)
+print(df)
+
+df.to_csv("UFC-test.csv")
